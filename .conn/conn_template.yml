@@ -1,0 +1,18 @@
+redshift_bidev_suflk:
+  conn_type: redshift
+  description: ''
+  extra: '{}'
+  host: suflk-.amazonaws.com
+  login: bi_dev
+  password: 
+  port: 5439
+  schema: suflk
+redshift_etl_suflk:
+  conn_type: redshift
+  description: ''
+  extra: ''
+  host: suflk-.amazonaws.com
+  login: etl_usr
+  password: 
+  port: 5439
+  schema: suflk
