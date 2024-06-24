@@ -109,8 +109,8 @@ select
 	,null                                                                            			   as honors_ld
 	,to_char(to_date(aos.exp_grad_term,'YYYYMMDD'),'J')                    						   as degr_confer_dt_key
 	,null                                               										   as degr_status_dt_key
-	,ffst.tuition_residency_cd                                                                     as tuition_residency_cd
-	,ffst.tuition_residency_ld                                                                     as tuition_residency_ld
+	,null                                                                     as tuition_residency_cd
+	,null                                                                     as tuition_residency_ld
 	,ffst.career_tot_cumulative                                                                    as career_tot_cumulative
 	,null                                                                                          as career_tot_test_credit
 	,ffst.career_tot_trnsfr                                                                        as career_tot_trnsfr

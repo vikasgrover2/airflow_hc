@@ -9,15 +9,14 @@ FROM (
          strm.rpt_entry_student_id   as student_id
   		,strm.academic_level_id 
         ,min(term.academic_period_start_date::date) as car_start_dt
-    FROM workday_ods.raas_student_period_details strm 
-    join workday_ods.raas_student_period stdnt_period
-    on strm.subtable_index  = stdnt_period.subtable_index 
+     FROM workday_ods.raas_student_period_details strm  --67374
     join workday_ods.maintained_academic_period term
     ON  strm.academic_period_id = term.id 
   --  and term.expir_timestamp is null
     
     GROUP BY strm.rpt_entry_student_id, strm.academic_level_id
 ) st2 ;
+
 
 drop table if exists instr_mode;
 
@@ -186,12 +185,13 @@ Insert into hercules_workday.ff_student_term
 	,student_hiatus_end_dt           
 	,honors_ind                      
 )
+
 Select  
    strm.rpt_entry_student_id ||'~'|| strm.academic_level_id ||'~'|| strm.academic_period_id   as src_sys_cd
   ,NULL as src_sys_exp_dt
-  ,NULL as eff_dt
+  ,strm.load_date as eff_dt
   ,NULL as exp_dt 
-  ,NULL as src_sys_eff_dt
+  ,strm.load_date as src_sys_eff_dt
   ,strm.rpt_entry_student_id   as emplid
   ,strm.rpt_entry_universal_id  as uid
   ,replace(strm.academic_period_id,'_',' ')   as strm
@@ -273,7 +273,7 @@ Select
   ,NULL as ipeds_career_ind
   ,NULL as full_time_bhe_ind
   ,NULL as collapsed_strm_stdnt_term
-  ,stdnt_period.rpt_entry_primary_degree_desc_descriptor as primary_acad_prog
+  ,strm.rpt_entry_primary_degree_desc_descriptor as primary_acad_prog
   ,NULL as primary_stdnt_car_nbr
   ,NULL as ir_stdnt_campus_cd
   ,NULL as bhe_residency_ld
@@ -344,7 +344,7 @@ Select
   ,NULL as honors_ind
 from workday_ods.raas_student_period_details strm
 
-join workday_ods.raas_student_period stdnt_period
+left join workday_ods.raas_student_period stdnt_period
   on strm.subtable_index  = stdnt_period.subtable_index 
 
 JOIN workday_ods.maintained_academic_period term   
