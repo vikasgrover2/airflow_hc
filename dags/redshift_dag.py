@@ -133,7 +133,7 @@ end_step9 = EmptyOperator(task_id="end_step9", dag=etl_dag)
 end_step8 >> step9
 step9>>[step9_completions_extract,step9_financial_aid_extract]>>end_step9
 
-step10 = EmptyOperator(task_id="step9", dag=etl_dag)
+step10 = EmptyOperator(task_id="step10", dag=etl_dag)
 step10_retention_extract     = SQLExecuteQueryOperator(task_id ='step10_retention_extract',conn_id =Variable.get("conn_bidev")     ,sql ='sql/PERSEUS.RETENTION_EXTRACT.sql',split_statements = True,dag=etl_dag)
 step10_course_registration_extract        = SQLExecuteQueryOperator(task_id ='step10_course_registration_extract',conn_id =Variable.get("conn_bidev")          ,sql ='sql/PERSEUS.COURSE_REGISTRATION_EXTRACT.sql',split_statements = True,dag=etl_dag)
 end_step10 = EmptyOperator(task_id="end_step10", dag=etl_dag)
