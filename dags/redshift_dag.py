@@ -93,7 +93,7 @@ step5>>[step5_ff_applications_prog,step5_ff_retention_grad_prog,step5_fact_degre
 step5f = PythonOperator(
     task_id='send_email_hercules',
     python_callable= email_job,
-    op_kwargs={"module_name":"Workday ETL",
+    op_kwargs={"module_name":"Workday Hercules",
                "client_name":"Suffolk",
                "recipients":"vikas.grover@heliocampus.com"
         },
@@ -121,28 +121,37 @@ step7>>[step7_cs_financial_aid_term,step7_cs_persistence,step7_cs_retention,step
 
 step8 = EmptyOperator(task_id="step8", dag=etl_dag)
 step8_colleague_slate_admissions_extract = SQLExecuteQueryOperator(task_id ='step8_colleague_slate_admissions_extract',conn_id =Variable.get("conn_bidev") ,sql ='sql/PERSEUS.COLLEAGUE_SLATE_ADMISSIONS_EXTRACT.sql',split_statements = True,dag=etl_dag)
-step8_completions_extract                = SQLExecuteQueryOperator(task_id ='step8_completions_extract',conn_id =Variable.get("conn_bidev")        ,sql ='sql/PERSEUS.COMPLETIONS_EXTRACT.sql',split_statements = True,dag=etl_dag)
-step8_course_registration_extract        = SQLExecuteQueryOperator(task_id ='step8_course_registration_extract',conn_id =Variable.get("conn_bidev")          ,sql ='sql/PERSEUS.COURSE_REGISTRATION_EXTRACT.sql',split_statements = True,dag=etl_dag)
+step8_student_term_extract  = SQLExecuteQueryOperator(task_id ='step8_student_term_extract',conn_id =Variable.get("conn_bidev")  ,sql ='sql/PERSEUS.STUDENT_TERM_EXTRACT.sql',split_statements = True,dag=etl_dag)
 end_step8 = EmptyOperator(task_id="end_step8", dag=etl_dag)
 end_step7 >> step8
-step8>>[step8_colleague_slate_admissions_extract,step8_completions_extract,step8_course_registration_extract]>>end_step8
+step8>>[step8_colleague_slate_admissions_extract,step8_student_term_extract]>>end_step8
 
 step9 = EmptyOperator(task_id="step9", dag=etl_dag)
+step9_completions_extract                = SQLExecuteQueryOperator(task_id ='step9_completions_extract',conn_id =Variable.get("conn_bidev")        ,sql ='sql/PERSEUS.COMPLETIONS_EXTRACT.sql',split_statements = True,dag=etl_dag)
 step9_financial_aid_extract = SQLExecuteQueryOperator(task_id ='step9_financial_aid_extract',conn_id =Variable.get("conn_bidev") ,sql ='sql/PERSEUS.FINANCIAL_AID_EXTRACT.sql',split_statements = True,dag=etl_dag)
-step9_retention_extract     = SQLExecuteQueryOperator(task_id ='step9_retention_extract',conn_id =Variable.get("conn_bidev")     ,sql ='sql/PERSEUS.RETENTION_EXTRACT.sql',split_statements = True,dag=etl_dag)
-step9_student_term_extract  = SQLExecuteQueryOperator(task_id ='step9_student_term_extract',conn_id =Variable.get("conn_bidev")  ,sql ='sql/PERSEUS.STUDENT_TERM_EXTRACT.sql',split_statements = True,dag=etl_dag)
 end_step9 = EmptyOperator(task_id="end_step9", dag=etl_dag)
 end_step8 >> step9
-step9>>[step9_financial_aid_extract,step9_retention_extract,step9_student_term_extract ]>>end_step9
+step9>>[step9_completions_extract,step9_financial_aid_extract]>>end_step9
 
-step9f = EmailOperator(
+step10 = EmptyOperator(task_id="step9", dag=etl_dag)
+step10_retention_extract     = SQLExecuteQueryOperator(task_id ='step10_retention_extract',conn_id =Variable.get("conn_bidev")     ,sql ='sql/PERSEUS.RETENTION_EXTRACT.sql',split_statements = True,dag=etl_dag)
+step10_course_registration_extract        = SQLExecuteQueryOperator(task_id ='step10_course_registration_extract',conn_id =Variable.get("conn_bidev")          ,sql ='sql/PERSEUS.COURSE_REGISTRATION_EXTRACT.sql',split_statements = True,dag=etl_dag)
+end_step10 = EmptyOperator(task_id="end_step10", dag=etl_dag)
+end_step9 >> step10
+step10>>[step10_retention_extract,step10_course_registration_extract]>>end_step10
+
+
+step10f = PythonOperator(
     task_id='send_email_perseus',
-    to='vikas.grover@heliocampus.com',
-    subject='Airflow - Sufolk Workday Perseus ETL Complete',
-    html_content='vikas.grover@heliocampus.com',
+    python_callable= email_job,
+    op_kwargs={"module_name":"Workday Perseus",
+               "client_name":"Suffolk",
+               "recipients":"vikas.grover@heliocampus.com"
+        },
     dag=etl_dag
 )
-end_step9>> step9f
+
+end_step10>> step10f
 
 etl_stop = EmptyOperator(task_id="etl_stop", dag=etl_dag)
-step9f >> etl_stop
+step10f >> etl_stop
