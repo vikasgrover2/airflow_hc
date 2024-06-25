@@ -90,15 +90,7 @@ end_step5 = EmptyOperator(task_id="end_step5", dag=etl_dag)
 end_step4 >> step5
 step5>>[step5_ff_applications_prog,step5_ff_retention_grad_prog,step5_fact_degree,step5_ff_student_term_trends_re]>>end_step5
 
-step5f = PythonOperator(
-    task_id='send_email_hercules',
-    python_callable= email_job,
-    op_kwargs={"module_name":"Workday Hercules",
-               "client_name":"Suffolk",
-               "recipients":"vikas.grover@heliocampus.com"
-        },
-    dag=etl_dag
-)
+step5f = PythonOperator(task_id='send_email_hercules',python_callable= email_job,op_kwargs={"module_name":"Workday Hercules","client_name":"Suffolk","recipients":"etlsupp@heliocampus.com"}, dag=etl_dag)
 end_step5>> step5f
 
 step6 = EmptyOperator(task_id="step6", dag=etl_dag)
@@ -140,16 +132,7 @@ end_step10 = EmptyOperator(task_id="end_step10", dag=etl_dag)
 end_step9 >> step10
 step10>>[step10_retention_extract,step10_course_registration_extract]>>end_step10
 
-
-step10f = PythonOperator(
-    task_id='send_email_perseus',
-    python_callable= email_job,
-    op_kwargs={"module_name":"Workday Perseus",
-               "client_name":"Suffolk",
-               "recipients":"vikas.grover@heliocampus.com"
-        },
-    dag=etl_dag
-)
+step10f = PythonOperator(task_id='send_email_perseus',python_callable= email_job, op_kwargs={"module_name":"Workday Perseus","client_name":"Suffolk","recipients":"etlsupp@heliocampus.com"}, dag=etl_dag)
 
 end_step10>> step10f
 
