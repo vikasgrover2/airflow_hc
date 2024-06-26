@@ -33,7 +33,7 @@ def email_job(module_name:str, client_name:str, recipients:str):
 
 etl_dag= DAG(
     dag_id=f"etl_hercules",
-    schedule="@daily",
+    schedule="0 6 * * *",
     start_date=datetime(2023, 1, 1),
     max_active_runs=1,
     template_searchpath='/opt/airflow',
