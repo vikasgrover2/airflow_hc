@@ -32,7 +32,7 @@ def email_job(module_name:str, client_name:str, recipients:str):
     server.sendmail(msg['From'], emaillist , msg.as_string())
 
 etl_dag= DAG(
-    dag_id=f"etl_hercules",
+    dag_id=f"etl_workday",
     schedule="0 6 * * *",
     start_date=datetime(2023, 1, 1),
     max_active_runs=1,
