@@ -32,15 +32,19 @@ def email_job(module_name:str, client_name:str, recipients:str):
     server.starttls()
     server.sendmail(msg['From'], emaillist , msg.as_string())
 
+default_args = {
+    'start_date':datetime(2024, 1, 1, tzinfo=pendulum.timezone("US/Eastern")),
+    'template_searchpath':'/opt/airflow',
+    'email':['etlsupp@heliocampus.com'],
+    'email_on_failure':True
+    }
+
 etl_dag= DAG(
     dag_id=f"etl_workday",
     schedule="0 6 * * *",
-    start_date=datetime(2024, 1, 1, tzinfo=pendulum.timezone("US/Eastern")),
-    email = ['etlsupp@heliocampus.com'],
-    email_on_failure= True,
     max_active_runs=1,
-    template_searchpath='/opt/airflow',
-    catchup=False
+    catchup=False,
+    default_args=default_args
 )
 
 etl_start = EmptyOperator(task_id="etl_start", dag=etl_dag)
