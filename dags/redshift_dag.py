@@ -34,7 +34,7 @@ def email_job(module_name:str, client_name:str, recipients:str):
 etl_dag= DAG(
     dag_id=f"etl_workday",
     schedule="0 6 * * *",
-    start_date=datetime(2023, 1, 1),
+    start_date=datetime(2024, 1, 1, tz="US/Eastern"),
     max_active_runs=1,
     template_searchpath='/opt/airflow',
     catchup=False
