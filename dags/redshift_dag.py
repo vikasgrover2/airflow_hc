@@ -4,6 +4,7 @@ from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from airflow import DAG
+import pendulum
 
 from airflow.models import Variable
 from airflow.operators.dummy_operator import DummyOperator
@@ -34,7 +35,7 @@ def email_job(module_name:str, client_name:str, recipients:str):
 etl_dag= DAG(
     dag_id=f"etl_workday",
     schedule="0 6 * * *",
-    start_date=datetime(2024, 1, 1, tz="US/Eastern"),
+    start_date=datetime(2024, 1, 1, tzinfo=pendulum.timezone("US/Eastern")),
     max_active_runs=1,
     template_searchpath='/opt/airflow',
     catchup=False
