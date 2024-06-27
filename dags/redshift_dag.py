@@ -34,7 +34,6 @@ def email_job(module_name:str, client_name:str, recipients:str):
 
 default_args = {
     'start_date':datetime(2024, 1, 1, tzinfo=pendulum.timezone("US/Eastern")),
-    'template_searchpath':'/opt/airflow',
     'email':['etlsupp@heliocampus.com'],
     'email_on_failure':True
     }
@@ -43,6 +42,7 @@ etl_dag= DAG(
     dag_id=f"etl_workday",
     schedule="0 6 * * *",
     max_active_runs=1,
+    template_searchpath='/opt/airflow',
     catchup=False,
     default_args=default_args
 )
