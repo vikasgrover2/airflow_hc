@@ -1,55 +1,77 @@
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
-from airflow.utils.decorators import apply_defaults
 import os
+import configparser
 
 class CustomSQLOperator(SQLExecuteQueryOperator):
-    template_fields = ('sql_file', 'parameters')
-    template_ext = ('.sql',)
-    
-    @apply_defaults
+   
     def __init__(self, sql_file, conn_id, parameters=None, *args, **kwargs):
-        super(CustomSQLOperator, self).__init__(sql='', conn_id=conn_id, parameters=parameters, *args, **kwargs)
+        super().__init__(sql='', conn_id=conn_id, parameters=parameters, *args, **kwargs)
         self.sql_file = sql_file
-        self.parameters = parameters or {}
-    
-    def render_sql(self, sqlpath, parampath):
-        rendered_sql = sqlpath
+        self.parameters = parameters
+        self.add_attr_c_path = parameters["add_attr_c_path"]
+        self.etl_cfg_path = parameters["etl_cfg_path"]
+        self.hercules_home = parameters["hercules_home"]
+        self.perseus_home = parameters["perseus_home"]
+
+    def log_fmtd_sql(self, file_dir,file_name,etl_full_sqls):
+        with open(file_dir+"log\\{}".format(file_name), "w") as f:
+            f.write(etl_full_sqls)
+            f.close()
+
+    def render_sql(self, sql_query,tablename, add_attr_c_path,etl_cfg_path):
+        etl_full_sqls = sql_query
+        
+        # Open config file (etl.cfg)
+        config = configparser.ConfigParser(dict_type = dict)
+        config.read(etl_cfg_path)
+        print(f"Read etl.cfg from {etl_cfg_path}")
+        
+        if not config.has_section(tablename.lower()):
+            print("adding section: " + tablename.lower())
+            config.add_section(tablename.lower())
+        
+        try:
+            config.set(tablename.lower(), 'hercules_home', self.hercules_home) #If the given section exists, set the given option to the specified value; otherwise raise NoSectionError. option and value must be strings;
+            config.set(tablename.lower(), 'perseus_home', self.perseus_home)
+            params = config[(tablename.lower())]                             # config[table_name.lower()]
+            print(dict(params))
+            # insert custom parameters
+            etl_full_sqls = etl_full_sqls.format( **params )
+            try:
+                etl_full_sqls = etl_full_sqls.format( **params )
+            except Exception as e:
+                print('no params',e)
+            else:
+                etl_full_sqls = etl_full_sqls    
+        except Exception as e:
+            print('no params',e)
+
+        rendered_sql = etl_full_sqls
+        self.log_fmtd_sql(file_dir= 'sql', file_name = tablename + ".sql", etl_full_sqls = etl_full_sqls)
         return rendered_sql
     
-    def execute(self, context):
+    def run_rendered_sql(self,redendered_sql,context):
+        self.log.info("Executing SQL query")
+        super().execute(context)
+        self.log.info("SQL query executed successfully")
+        
+    def execute(self, context)-> None:
         # Read the SQL file
         self.log.info(f"Reading SQL file: {self.sql_file}")
+        tablename = self.sql_file.split('/')[1].split('.')[0]+'.'+self.sql_file.split('.')[1]
+        
         with open(self.sql_file, 'r') as file:
             sql_query = file.read()
         
-        # Render the SQL query with Jinja
+        # Render the SQL query
         self.log.info("Rendering SQL query with parameters")
-        rendered_query = self.render_sql(sql_query, self.parameters)
-        
+        rendered_query = self.render_sql(sql_query,tablename, self.add_attr_c_path, self.etl_cfg_path)
         # Set the SQL query to be executed
         self.sql = rendered_query
-        
         # Execute the SQL query using the parent class's execute method
-        self.log.info("Executing SQL query")
-        super(CustomSQLOperator, self).execute(context)
-        self.log.info("SQL query executed successfully")
+        self.run_rendered_sql(rendered_query,context)
 
 '''# Example usage in a DAG
-from airflow import DAG
-from airflow.utils.dates import days_ago
-
-default_args = {
-    'owner': 'airflow',
-    'start_date': days_ago(1),
-}
-
-dag = DAG(
-    'example_custom_sql_operator',
-    default_args=default_args,
-    description='A simple example DAG using CustomSQLOperator',
-    schedule_interval=None,
-)
-
 # Example task using CustomSQLOperator
 task = CustomSQLOperator(
     task_id='run_sql',
