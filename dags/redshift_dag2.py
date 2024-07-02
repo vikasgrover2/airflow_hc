@@ -121,20 +121,20 @@ step4 = EmptyOperator(task_id="step4", dag=etl_dag)
 step4_fact_aos =        CustomSQLOperator(task_id ='step4_fact_aos',conn_id =Variable.get("conn_etl")        ,sql_file='sql/HERCULES_WORKDAY.FACT_AOS.sql',split_statements = True, parameters= {"add_attr_c_path":add_attr_c_path, "etl_cfg_path":etl_cfg_path, "hercules_home":hercules_home,"perseus_home":perseus_home},dag=etl_dag)
 step4_fact_enrollment = CustomSQLOperator(task_id ='step4_fact_enrollment',conn_id =Variable.get("conn_etl") ,sql_file='sql/HERCULES_WORKDAY.FACT_ENROLLMENT.sql',split_statements = True, parameters= {"add_attr_c_path":add_attr_c_path, "etl_cfg_path":etl_cfg_path, "hercules_home":hercules_home,"perseus_home":perseus_home},dag=etl_dag)
 step4_ff_student_term = CustomSQLOperator(task_id ='step4_ff_student_term',conn_id =Variable.get("conn_etl")         ,sql_file='sql/HERCULES_WORKDAY.FF_STUDENT_TERM.sql',split_statements = True, parameters= {"add_attr_c_path":add_attr_c_path, "etl_cfg_path":etl_cfg_path, "hercules_home":hercules_home,"perseus_home":perseus_home},dag=etl_dag)
-step4_fact_finaid =     CustomSQLOperator(task_id ='step4_fact_finaid',conn_id =Variable.get("conn_etl")     ,sql_file='sql/HERCULES_WORKDAY.FACT_FINAID.sql',split_statements = True, parameters= {"add_attr_c_path":add_attr_c_path, "etl_cfg_path":etl_cfg_path, "hercules_home":hercules_home,"perseus_home":perseus_home},dag=etl_dag)
+step4_fact_degree =     CustomSQLOperator(task_id ='step4_fact_degree',conn_id =Variable.get("conn_etl")     ,sql_file='sql/HERCULES_WORKDAY.FACT_DEGREE.sql',split_statements = True, parameters= {"add_attr_c_path":add_attr_c_path, "etl_cfg_path":etl_cfg_path, "hercules_home":hercules_home,"perseus_home":perseus_home},dag=etl_dag)
 step4_ff_applications = CustomSQLOperator(task_id ='step4_ff_applications',conn_id =Variable.get("conn_etl")                ,sql_file='sql/HERCULES_WORKDAY.FF_APPLICATIONS.sql',split_statements = True, parameters= {"add_attr_c_path":add_attr_c_path, "etl_cfg_path":etl_cfg_path, "hercules_home":hercules_home,"perseus_home":perseus_home},dag=etl_dag)
 end_step4 = EmptyOperator(task_id="end_step4", dag=etl_dag)
 end_step3 >> step4
-step4>>[step4_fact_aos,step4_ff_student_term,step4_fact_enrollment,step4_fact_finaid,step4_ff_applications]>>end_step4
+step4>>[step4_fact_aos,step4_ff_student_term,step4_fact_enrollment,step4_fact_degree,step4_ff_applications]>>end_step4
 
 step5 = EmptyOperator(task_id="step5", dag=etl_dag)
 step5_ff_applications_prog      = CustomSQLOperator(task_id ='step5_ff_applications_prog',conn_id =Variable.get("conn_etl")    ,sql_file='sql/HERCULES_WORKDAY.FF_APPLICATIONS_PROG.sql',split_statements = True, parameters= {"add_attr_c_path":add_attr_c_path, "etl_cfg_path":etl_cfg_path, "hercules_home":hercules_home,"perseus_home":perseus_home},dag=etl_dag)
 step5_ff_retention_grad_prog    = CustomSQLOperator(task_id ='step5_ff_retention_grad_prog',conn_id =Variable.get("conn_etl")  ,sql_file='sql/HERCULES_WORKDAY.FF_RETENTION_GRAD_PROG.sql',split_statements = True, parameters= {"add_attr_c_path":add_attr_c_path, "etl_cfg_path":etl_cfg_path, "hercules_home":hercules_home,"perseus_home":perseus_home},dag=etl_dag)
-step5_fact_degree =     CustomSQLOperator(task_id ='step5_fact_degree',conn_id =Variable.get("conn_etl")     ,sql_file='sql/HERCULES_WORKDAY.FACT_DEGREE.sql',split_statements = True, parameters= {"add_attr_c_path":add_attr_c_path, "etl_cfg_path":etl_cfg_path, "hercules_home":hercules_home,"perseus_home":perseus_home},dag=etl_dag)
+step5_fact_finaid =     CustomSQLOperator(task_id ='step5_fact_finaid',conn_id =Variable.get("conn_etl")     ,sql_file='sql/HERCULES_WORKDAY.FACT_FINAID.sql',split_statements = True, parameters= {"add_attr_c_path":add_attr_c_path, "etl_cfg_path":etl_cfg_path, "hercules_home":hercules_home,"perseus_home":perseus_home},dag=etl_dag)
 step5_ff_student_term_trends_re = CustomSQLOperator(task_id ='step5_ff_student_term_trends_re',conn_id =Variable.get("conn_etl") ,sql_file='sql/HERCULES_WORKDAY.FF_STUDENT_TERM_TRENDS_RE.sql',split_statements = True, parameters= {"add_attr_c_path":add_attr_c_path, "etl_cfg_path":etl_cfg_path, "hercules_home":hercules_home,"perseus_home":perseus_home},dag=etl_dag)
 end_step5 = EmptyOperator(task_id="end_step5", dag=etl_dag)
 end_step4 >> step5
-step5>>[step5_ff_applications_prog,step5_ff_retention_grad_prog,step5_fact_degree,step5_ff_student_term_trends_re]>>end_step5
+step5>>[step5_ff_applications_prog,step5_ff_retention_grad_prog,step5_fact_finaid,step5_ff_student_term_trends_re]>>end_step5
 
 step5f = PythonOperator(task_id='send_email_hercules',python_callable= email_job,op_kwargs={"module_name":"Workday Hercules","client_name":"Suffolk","recipients":"etlsupp@heliocampus.com"}, dag=etl_dag)
 end_step5>> step5f
