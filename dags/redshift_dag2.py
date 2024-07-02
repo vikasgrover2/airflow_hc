@@ -6,6 +6,9 @@ from airflow.models import Variable
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import PythonOperator
+from email.mime.text import MIMEText
+from email.mime.application import MIMEApplication
+from email.mime.multipart import MIMEMultipart
 import os
 import pendulum
 
