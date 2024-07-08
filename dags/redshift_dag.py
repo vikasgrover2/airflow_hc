@@ -78,27 +78,37 @@ end_step3 = EmptyOperator(task_id="end_step3", dag=etl_dag)
 end_step2 >> step3
 step3>>[step3_dim_person_phone_email,step3_dim_plan,step3_dim_program,step3_dim_term]>>end_step3
 
-step4 = EmptyOperator(task_id="step4", dag=etl_dag)
-step4_fact_aos =        SQLExecuteQueryOperator(task_id ='step4_fact_aos',conn_id =Variable.get("conn_etl")        ,sql ='sql/HERCULES_WORKDAY.FACT_AOS.sql',split_statements = True,dag=etl_dag)
-step4_fact_enrollment = SQLExecuteQueryOperator(task_id ='step4_fact_enrollment',conn_id =Variable.get("conn_etl") ,sql ='sql/HERCULES_WORKDAY.FACT_ENROLLMENT.sql',split_statements = True,dag=etl_dag)
-step4_ff_student_term = SQLExecuteQueryOperator(task_id ='step4_ff_student_term',conn_id =Variable.get("conn_etl")         ,sql ='sql/HERCULES_WORKDAY.FF_STUDENT_TERM.sql',split_statements = True,dag=etl_dag)
-step4_fact_degree =     SQLExecuteQueryOperator(task_id ='step4_fact_degree',conn_id =Variable.get("conn_etl")     ,sql ='sql/HERCULES_WORKDAY.FACT_DEGREE.sql',split_statements = True,dag=etl_dag)
-step4_ff_applications = SQLExecuteQueryOperator(task_id ='step4_ff_applications',conn_id =Variable.get("conn_etl")                ,sql ='sql/HERCULES_WORKDAY.FF_APPLICATIONS.sql',split_statements = True,dag=etl_dag)
-end_step4 = EmptyOperator(task_id="end_step4", dag=etl_dag)
-end_step3 >> step4
-step4>>[step4_fact_aos,step4_ff_student_term,step4_fact_enrollment,step4_fact_degree,step4_ff_applications]>>end_step4
+step4a = EmptyOperator(task_id="step4a", dag=etl_dag)
+step4a_fact_enrollment = SQLExecuteQueryOperator(task_id ='step4a_fact_enrollment',conn_id =Variable.get("conn_etl") ,sql ='sql/HERCULES_WORKDAY.FACT_ENROLLMENT.sql',split_statements = True,dag=etl_dag)
+step4a_ff_student_term = SQLExecuteQueryOperator(task_id ='step4a_ff_student_term',conn_id =Variable.get("conn_etl")         ,sql ='sql/HERCULES_WORKDAY.FF_STUDENT_TERM.sql',split_statements = True,dag=etl_dag)
+end_step4a = EmptyOperator(task_id="end_step4a", dag=etl_dag)
+end_step3 >> step4a
+step4a>>[step4a_ff_student_term,step4a_fact_enrollment]>>end_step4a
 
-step5 = EmptyOperator(task_id="step5", dag=etl_dag)
-step5_ff_applications_prog      = SQLExecuteQueryOperator(task_id ='step5_ff_applications_prog',conn_id =Variable.get("conn_etl")    ,sql ='sql/HERCULES_WORKDAY.FF_APPLICATIONS_PROG.sql',split_statements = True,dag=etl_dag)
-step5_fact_finaid =     SQLExecuteQueryOperator(task_id ='step5_fact_finaid',conn_id =Variable.get("conn_etl")     ,sql ='sql/HERCULES_WORKDAY.FACT_FINAID.sql',split_statements = True,dag=etl_dag)
-step5_ff_retention_grad_prog    = SQLExecuteQueryOperator(task_id ='step5_ff_retention_grad_prog',conn_id =Variable.get("conn_etl")  ,sql ='sql/HERCULES_WORKDAY.FF_RETENTION_GRAD_PROG.sql',split_statements = True,dag=etl_dag)
-step5_ff_student_term_trends_re = SQLExecuteQueryOperator(task_id ='step5_ff_student_term_trends_re',conn_id =Variable.get("conn_etl") ,sql ='sql/HERCULES_WORKDAY.FF_STUDENT_TERM_TRENDS_RE.sql',split_statements = True,dag=etl_dag)
-end_step5 = EmptyOperator(task_id="end_step5", dag=etl_dag)
-end_step4 >> step5
-step5>>[step5_ff_applications_prog,step5_ff_retention_grad_prog,step5_fact_finaid,step5_ff_student_term_trends_re]>>end_step5
+step4b = EmptyOperator(task_id="step4b", dag=etl_dag)
+step4b_fact_aos =        SQLExecuteQueryOperator(task_id ='step4b_fact_aos',conn_id =Variable.get("conn_etl")        ,sql ='sql/HERCULES_WORKDAY.FACT_AOS.sql',split_statements = True,dag=etl_dag)
+step4b_ff_applications = SQLExecuteQueryOperator(task_id ='step4b_ff_applications',conn_id =Variable.get("conn_etl")                ,sql ='sql/HERCULES_WORKDAY.FF_APPLICATIONS.sql',split_statements = True,dag=etl_dag)
+end_step4b = EmptyOperator(task_id="end_step4b", dag=etl_dag)
+end_step4a >> step4b
+step4b>>[step4b_fact_aos,step4b_ff_applications]>>end_step4b
+
+step5a = EmptyOperator(task_id="step5a", dag=etl_dag)
+step5a_fact_degree =     SQLExecuteQueryOperator(task_id ='step5a_fact_degree',conn_id =Variable.get("conn_etl")     ,sql ='sql/HERCULES_WORKDAY.FACT_DEGREE.sql',split_statements = True,dag=etl_dag)
+step5a_ff_applications_prog      = SQLExecuteQueryOperator(task_id ='step5a_ff_applications_prog',conn_id =Variable.get("conn_etl")    ,sql ='sql/HERCULES_WORKDAY.FF_APPLICATIONS_PROG.sql',split_statements = True,dag=etl_dag)
+step5a_fact_finaid =     SQLExecuteQueryOperator(task_id ='step5a_fact_finaid',conn_id =Variable.get("conn_etl")     ,sql ='sql/HERCULES_WORKDAY.FACT_FINAID.sql',split_statements = True,dag=etl_dag)
+end_step5a = EmptyOperator(task_id="end_step5a", dag=etl_dag)
+end_step4b >> step5a
+step5a>>[step5a_ff_applications_prog,step5a_fact_degree,step5a_fact_finaid]>>end_step5a
+
+step5b = EmptyOperator(task_id="step5b", dag=etl_dag)
+step5b_ff_retention_grad_prog    = SQLExecuteQueryOperator(task_id ='step5b_ff_retention_grad_prog',conn_id =Variable.get("conn_etl")  ,sql ='sql/HERCULES_WORKDAY.FF_RETENTION_GRAD_PROG.sql',split_statements = True,dag=etl_dag)
+step5b_ff_student_term_trends_re = SQLExecuteQueryOperator(task_id ='step5b_ff_student_term_trends_re',conn_id =Variable.get("conn_etl") ,sql ='sql/HERCULES_WORKDAY.FF_STUDENT_TERM_TRENDS_RE.sql',split_statements = True,dag=etl_dag)
+end_step5b = EmptyOperator(task_id="end_step5b", dag=etl_dag)
+step5a >> step5b
+step5b>>[step5b_ff_retention_grad_prog,step5b_ff_student_term_trends_re]>>end_step5b
 
 step5f = PythonOperator(task_id='send_email_hercules',python_callable= email_job,op_kwargs={"module_name":"Workday Hercules","client_name":"Suffolk","recipients":"etlsupp@heliocampus.com"}, dag=etl_dag)
-end_step5>> step5f
+end_step5b>> step5f
 
 step6 = EmptyOperator(task_id="step6", dag=etl_dag)
 step6_cs_admission     = SQLExecuteQueryOperator(task_id ='step6_cs_admission',conn_id =Variable.get("conn_bidev")    ,sql ='sql/PERSEUS_WORKDAY.CS_ADMISSION.sql',split_statements = True,dag=etl_dag)
