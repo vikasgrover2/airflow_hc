@@ -47,7 +47,7 @@ def verify_job_on_env():
     if env == 'prod':
         return 'verify_replication_sensor'
     else:
-        return 'etl_start'
+        return 'skip_verify_ods'
 
 etl_dag= DAG(
     dag_id=f"etl_workday",
@@ -71,8 +71,7 @@ verify_branch_op = BranchPythonOperator(
         task_id='branch_verify_task',
         python_callable=verify_job_on_env
     )
-
-etl_start = EmptyOperator(task_id="etl_start", dag=etl_dag)
+skip_verify_ods = EmptyOperator(task_id="skip_verify_ods", dag=etl_dag)
 
 verify_replication_sensor = SqlSensor(
     task_id='verify_replication_sensor',
@@ -88,8 +87,9 @@ verify_replication_sensor = SqlSensor(
     dag=etl_dag
 )
 
-verify_branch_op >> [verify_replication_sensor, etl_start]
-verify_replication_sensor >> etl_start
+verify_branch_op >> [verify_replication_sensor, skip_verify_ods]
+
+etl_start = EmptyOperator(task_id="etl_start", dag=etl_dag, trigger_rule='one_success')
 
 step1 = EmptyOperator(task_id="step1", dag=etl_dag)
 
@@ -100,7 +100,10 @@ step1_dim_car_prgrm_plan =  SQLExecuteQueryOperator(task_id ='step1_dim_car_prgr
 step1_dim_class =           SQLExecuteQueryOperator(task_id ='step1_dim_class',conn_id =Variable.get("conn_etl")   ,sql ='sql/HERCULES_WORKDAY.DIM_CLASS.sql',split_statements = True,dag=etl_dag)  
 end_step1 = EmptyOperator(task_id="end_step1", dag=etl_dag)
 
-etl_start >> step1
+verify_replication_sensor >> etl_start
+skip_verify_ods >> etl_start
+
+etl_start>>step1
 
 step1>>[step1_dim_address, step1_dim_address_cascade, step1_dim_career, step1_dim_car_prgrm_plan,step1_dim_class] >>end_step1
 
