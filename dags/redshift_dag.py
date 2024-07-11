@@ -12,6 +12,32 @@ from airflow.operators.empty import EmptyOperator
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 from airflow.operators.email_operator import EmailOperator
 from airflow.operators.python import PythonOperator
+import counts_job as cj
+
+hercules_home = "hercules_workday"
+counts_schema = "hercules"
+
+def insert_counts(module_name:str, schemaname:str, conn_id:str)-> None:
+    cj.insert_counts(conn_id, schemaname, module_name)
+    print("Inserted counts")
+
+def get_counts(module_name:str, schemaname:str, conn_id:str)-> None:
+    rows = cj.get_counts(conn_id, schemaname, module_name)
+    print("Received counts")
+    return rows
+
+def email_job(module_name:str, client_name:str, recipients:str,conn_id:str, schemaname:str):
+    module= module_name
+    client = client_name
+    recipients_ls =recipients.split(',')
+    counter=0
+
+    tabcount="<table border=\"0\" cellpadding=\"4\"><tr bgcolor=\"yellow\" align=\"left\"> <th>#</th><th>Table Name</th><th>Counts</th></tr><tbody>"
+    cur= get_counts(module, schemaname,conn_id )
+
+    for rec2 in cur:
+        counter+=1
+        tabcount+="<tr><td>" + str(counter) + "</td><td>" + str(rec2[0]) + "</td><td>" + str(rec2[1]) + "</td></tr>"        
 from airflow.providers.common.sql.sensors.sql import SqlSensor
 from airflow.operators.python import BranchPythonOperator
 
