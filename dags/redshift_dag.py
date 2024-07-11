@@ -12,6 +12,7 @@ from airflow.operators.empty import EmptyOperator
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 from airflow.operators.email_operator import EmailOperator
 from airflow.operators.python import PythonOperator
+from airflow.providers.common.sql.sensors.sql import SqlSensor
 
 def email_job(module_name:str, client_name:str, recipients:str):
     p_module= module_name
@@ -47,7 +48,31 @@ etl_dag= DAG(
     default_args=default_args
 )
 
+def _success_criteria(record):
+    print("Process successfully reached the desired status")
+    return record
+
+
+def _failure_criteria(record):
+    print("Process failed to proceed")
+    return True if not record else False
+
+sql_sensor_task = SqlSensor(
+    task_id='verify_replication_sensor',
+    sql="sql/VERIFY_JOB.sql",
+    conn_id=Variable.get("conn_etl"),
+    success=_success_criteria,
+    failure=_failure_criteria,
+    params={"flag_status_column":"load_type","schema_name":"workday_ods","log_table_name":"cdc_log",
+                "flag_time_column":"load_timestamp","sysdate_offset":"0","flag_column_name":"local_table_name",
+                "module_name":"ALL TABLES"}, 
+    poke_interval=10,
+    timeout=10*2,
+    dag=etl_dag,
+)
+
 etl_start = EmptyOperator(task_id="etl_start", dag=etl_dag)
+sql_sensor_task>>etl_start
 step1 = EmptyOperator(task_id="step1", dag=etl_dag)
 
 step1_dim_address =         SQLExecuteQueryOperator(task_id ='step1_dim_address',conn_id =Variable.get("conn_etl")  ,sql ='sql/HERCULES_WORKDAY.DIM_ADDRESS.sql',split_statements = True,dag=etl_dag)

@@ -1,4 +1,5 @@
 {
     "conn_bidev": "redshift_bidev_suflk",
-    "conn_etl": "redshift_etl_suflk"
+    "conn_etl": "redshift_etl_suflk",
+    "env":  "local"
 }
