@@ -13,6 +13,8 @@ from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 from airflow.operators.email_operator import EmailOperator
 from airflow.operators.python import PythonOperator
 from airflow.providers.common.sql.sensors.sql import SqlSensor
+from airflow.operators.python import BranchPythonOperator
+
 
 def email_job(module_name:str, client_name:str, recipients:str):
     p_module= module_name
@@ -39,6 +41,14 @@ default_args = {
     'email_on_failure':True
     }
 
+def verify_job_on_env():
+    env = Variable.get("env")
+
+    if env == 'prod':
+        return 'verify_replication_sensor'
+    else:
+        return 'etl_start'
+
 etl_dag= DAG(
     dag_id=f"etl_workday",
     schedule="0 6 * * *",
@@ -57,7 +67,14 @@ def _failure_criteria(record):
     print("Process failed to proceed")
     return True if not record else False
 
-sql_sensor_task = SqlSensor(
+verify_branch_op = BranchPythonOperator(
+        task_id='branch_verify_task',
+        python_callable=verify_job_on_env
+    )
+
+etl_start = EmptyOperator(task_id="etl_start", dag=etl_dag)
+
+verify_replication_sensor = SqlSensor(
     task_id='verify_replication_sensor',
     sql="sql/VERIFY_JOB.sql",
     conn_id=Variable.get("conn_etl"),
@@ -66,13 +83,14 @@ sql_sensor_task = SqlSensor(
     params={"flag_status_column":"load_type","schema_name":"workday_ods","log_table_name":"cdc_log",
                 "flag_time_column":"load_timestamp","sysdate_offset":"0","flag_column_name":"local_table_name",
                 "module_name":"ALL TABLES"}, 
-    poke_interval=10,
-    timeout=10*2,
-    dag=etl_dag,
+    poke_interval=60,
+    timeout=60*60*2,
+    dag=etl_dag
 )
 
-etl_start = EmptyOperator(task_id="etl_start", dag=etl_dag)
-sql_sensor_task>>etl_start
+verify_branch_op >> [verify_replication_sensor, etl_start]
+verify_replication_sensor >> etl_start
+
 step1 = EmptyOperator(task_id="step1", dag=etl_dag)
 
 step1_dim_address =         SQLExecuteQueryOperator(task_id ='step1_dim_address',conn_id =Variable.get("conn_etl")  ,sql ='sql/HERCULES_WORKDAY.DIM_ADDRESS.sql',split_statements = True,dag=etl_dag)
@@ -81,7 +99,9 @@ step1_dim_career =          SQLExecuteQueryOperator(task_id ='step1_dim_career',
 step1_dim_car_prgrm_plan =  SQLExecuteQueryOperator(task_id ='step1_dim_car_prgrm_plan',conn_id =Variable.get("conn_etl")           ,sql ='sql/HERCULES_WORKDAY.DIM_CAR_PRGRM_PLAN.sql',split_statements = True,dag=etl_dag)
 step1_dim_class =           SQLExecuteQueryOperator(task_id ='step1_dim_class',conn_id =Variable.get("conn_etl")   ,sql ='sql/HERCULES_WORKDAY.DIM_CLASS.sql',split_statements = True,dag=etl_dag)  
 end_step1 = EmptyOperator(task_id="end_step1", dag=etl_dag)
+
 etl_start >> step1
+
 step1>>[step1_dim_address, step1_dim_address_cascade, step1_dim_career, step1_dim_car_prgrm_plan,step1_dim_class] >>end_step1
 
 step2 = EmptyOperator(task_id="step2", dag=etl_dag)
