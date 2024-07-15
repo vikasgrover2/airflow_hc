@@ -51,7 +51,7 @@ def verify_job_on_env():
 
 etl_dag= DAG(
     dag_id=f"etl_workday",
-    schedule="0 6 * * *",
+    schedule="0 9 * * *",
     max_active_runs=1,
     template_searchpath='/opt/airflow',
     catchup=False,
