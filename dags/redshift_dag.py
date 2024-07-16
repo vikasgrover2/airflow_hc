@@ -175,8 +175,7 @@ step5a >> step5b
 step5b>>[step5b_ff_retention_grad_prog,step5b_ff_student_term_trends_re]>>end_step5b
 
 step5e = PythonOperator(task_id='counts_hercules',python_callable= insert_counts,op_kwargs={"module_name":"Workday Hercules","schemaname": counts_schema,"conn_id":Variable.get("conn_etl")}, dag=etl_dag)
-
-step5f = PythonOperator(task_id='send_email_hercules',python_callable= email_job,op_kwargs={"module_name":"Workday Hercules","client_name":"Suffolk","recipients":"etlsupp@heliocampus.com"}, dag=etl_dag)
+step5f = PythonOperator(task_id='send_email_hercules',python_callable= email_job,op_kwargs={"module_name":"Workday Hercules","client_name":"Suffolk","recipients":"etlsupp@heliocampus.com","conn_id":Variable.get("conn_etl"), "schemaname": counts_schema}, dag=etl_dag)
 end_step5b>>step5e>> step5f
 
 step6 = EmptyOperator(task_id="step6", dag=etl_dag)
