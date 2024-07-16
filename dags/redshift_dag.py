@@ -4,6 +4,7 @@ from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from airflow import DAG
+import counts_job as cj
 import pendulum
 
 from airflow.models import Variable
@@ -15,20 +16,38 @@ from airflow.operators.python import PythonOperator
 from airflow.providers.common.sql.sensors.sql import SqlSensor
 from airflow.operators.python import BranchPythonOperator
 
+counts_schema = "hercules"
 
-def email_job(module_name:str, client_name:str, recipients:str):
-    p_module= module_name
-    p_client_name = client_name
-    p_recipients =recipients.split(',')
-    
+def insert_counts(module_name:str, schemaname:str, conn_id:str)-> None:
+    cj.insert_counts(conn_id, schemaname, module_name)
+    print("Inserted counts")
+
+def get_counts(module_name:str, schemaname:str, conn_id:str)-> None:
+    rows = cj.get_counts(conn_id, schemaname, module_name)
+    print("Received counts")
+    return rows
+
+def email_job(module_name:str, client_name:str, recipients:str,conn_id:str, schemaname:str):
+    module= module_name
+    client = client_name
+    recipients_ls =recipients.split(',')
+    counter=0
+
+    tabcount="<table border=\"0\" cellpadding=\"4\"><tr bgcolor=\"yellow\" align=\"left\"> <th>#</th><th>Table Name</th><th>Counts</th></tr><tbody>"
+    cur= get_counts(module, schemaname,conn_id )
+
+    for rec2 in cur:
+        counter+=1
+        tabcount+="<tr><td>" + str(counter) + "</td><td>" + str(rec2[0]) + "</td><td>" + str(rec2[1]) + "</td></tr>"        
     msg = MIMEMultipart()
     msg['From'] = 'etlsupp@heliocampus.com'
     msg['Reply-to'] = 'etlsupp@heliocampus.com'
-    msghdr= " <p> "+p_module+" ETL completed successfully ! </p>"
-    msg['Subject'] = str(p_client_name+ " - "+p_module+" Airflow ETL completed successfully")        
-    emaillist = [elem.strip().split(',') for elem in p_recipients]
+    msghdr= " <p> "+module+" ETL completed successfully ! </p>"
+    msg['Subject'] = str(client+ " - "+module+" Airflow ETL completed successfully")        
+    emaillist = [elem.strip().split(',') for elem in recipients_ls]
     msg.preamble = 'Multipart massage.\n'
-    complete_msg=MIMEText(msghdr,'html')
+    complete_msg=MIMEText(msghdr+tabcount,'html')
+    print(complete_msg)
     msg.attach(complete_msg)
     server = smtplib.SMTP("smtp-relay.gmail.com:587")
     server.ehlo()
@@ -155,8 +174,10 @@ end_step5b = EmptyOperator(task_id="end_step5b", dag=etl_dag)
 step5a >> step5b
 step5b>>[step5b_ff_retention_grad_prog,step5b_ff_student_term_trends_re]>>end_step5b
 
+step5e = PythonOperator(task_id='counts_hercules',python_callable= insert_counts,op_kwargs={"module_name":"Workday Hercules","schemaname": counts_schema,"conn_id":Variable.get("conn_etl")}, dag=etl_dag)
+
 step5f = PythonOperator(task_id='send_email_hercules',python_callable= email_job,op_kwargs={"module_name":"Workday Hercules","client_name":"Suffolk","recipients":"etlsupp@heliocampus.com"}, dag=etl_dag)
-end_step5b>> step5f
+end_step5b>>step5e>> step5f
 
 step6 = EmptyOperator(task_id="step6", dag=etl_dag)
 step6_cs_admission     = SQLExecuteQueryOperator(task_id ='step6_cs_admission',conn_id =Variable.get("conn_bidev")    ,sql ='sql/PERSEUS_WORKDAY.CS_ADMISSION.sql',split_statements = True,dag=etl_dag)
