@@ -218,7 +218,7 @@ end_step9 >> step10
 step10>>[step10_retention_extract,step10_course_registration_extract]>>end_step10
 
 step10e = PythonOperator(task_id='counts_perseus',python_callable= insert_counts,op_kwargs={"module_name":"Workday Perseus","schemaname": counts_schema,"conn_id":Variable.get("conn_etl")}, dag=etl_dag)
-step10f = PythonOperator(task_id='send_email_perseus',python_callable= email_job,op_kwargs={"module_name":"Workday Hercules","client_name":"Suffolk","recipients":"etlsupp@heliocampus.com","conn_id":Variable.get("conn_etl"), "schemaname": counts_schema}, dag=etl_dag)
+step10f = PythonOperator(task_id='send_email_perseus',python_callable= email_job,op_kwargs={"module_name":"Workday Perseus","client_name":"Suffolk","recipients":"etlsupp@heliocampus.com","conn_id":Variable.get("conn_etl"), "schemaname": counts_schema}, dag=etl_dag)
 
 end_step10>>step10e>> step10f
 
