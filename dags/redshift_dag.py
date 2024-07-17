@@ -22,6 +22,8 @@ AF_Home = os.environ['AIRFLOW_HOME']
 add_attr_c_path = AF_Home+ "/sql/ADD_ATTR_C"
 etl_cfg_path = AF_Home+ "/sql/etl.cfg"
 env = Variable.get("env")
+counts_schema = "hercules"
+
 if env=='QAT':
     hercules_home = "hercules_workday_qat"
     perseus_home = "perseus_workday_qat"
@@ -35,11 +37,27 @@ elif env=='Test':
     hercules_home = "hercules_workday"
     perseus_home = "perseus_workday"
 
-def email_job(module_name:str, client_name:str, recipients:str):
-    p_module= module_name
-    p_client_name = client_name
-    p_recipients =recipients.split(',')
-    
+def insert_counts(module_name:str, schemaname:str, conn_id:str)-> None:
+    cj.insert_counts(conn_id, schemaname, module_name)
+    print("Inserted counts")
+
+def get_counts(module_name:str, schemaname:str, conn_id:str)-> None:
+    rows = cj.get_counts(conn_id, schemaname, module_name)
+    print("Received counts")
+    return rows
+
+def email_job(module_name:str, client_name:str, recipients:str,conn_id:str, schemaname:str):
+    module= module_name
+    client = client_name
+    recipients_ls =recipients.split(',')
+    counter=0
+
+    tabcount="<table border=\"0\" cellpadding=\"4\"><tr bgcolor=\"yellow\" align=\"left\"> <th>#</th><th>Table Name</th><th>Counts</th></tr><tbody>"
+    cur= get_counts(module, schemaname,conn_id )
+
+    for rec2 in cur:
+        counter+=1
+        tabcount+="<tr><td>" + str(counter) + "</td><td>" + str(rec2[0]) + "</td><td>" + str(rec2[1]) + "</td></tr>"        
     msg = MIMEMultipart()
     msg['From'] = 'etlsupp@heliocampus.com'
     msg['Reply-to'] = 'etlsupp@heliocampus.com'
