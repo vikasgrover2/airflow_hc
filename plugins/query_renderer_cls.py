@@ -20,7 +20,20 @@ class CustomSQLOperator(SQLExecuteQueryOperator):
 
     def render_sql(self, sql_query,tablename, add_attr_c_path,etl_cfg_path):
         etl_full_sqls = sql_query
-        
+        try:
+            with open(add_attr_c_path+"/"+tablename+"_ADD_ATTR_C.sql",'r') as addattr_file:
+                sql_query_add_attr = addattr_file.read()
+                etl_full_sqls = '\n'.join(etl_full_sqls , sql_query_add_attr)
+        except Exception as e:
+            print('no add attr found',e)
+
+        try:
+            with open(add_attr_c_path+"/"+tablename+"_C.sql",'r') as _c_file:
+                sql_query_C = _c_file.read()
+                etl_full_sqls = '\n'.join(etl_full_sqls , sql_query_C)
+        except Exception as e:
+            print(f'no {tablename}_C found',e)
+
         # Open config file (etl.cfg)
         config = configparser.ConfigParser(dict_type = dict)
         config.read(etl_cfg_path)
