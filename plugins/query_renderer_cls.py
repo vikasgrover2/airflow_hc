@@ -14,8 +14,9 @@ class CustomSQLOperator(SQLExecuteQueryOperator):
         self.perseus_home = parameters["perseus_home"]
 
     def log_fmtd_sql(self, file_dir,file_name,etl_full_sqls):
-        with open(file_dir+"log\\{}".format(file_name), "w") as f:
+        with open(file_dir+"/log/{}".format(file_name), "w") as f:
             f.write(etl_full_sqls)
+            print(f"{file_name} log file written")
             f.close()
 
     def render_sql(self, sql_query,tablename, add_attr_c_path,etl_cfg_path):
@@ -27,14 +28,14 @@ class CustomSQLOperator(SQLExecuteQueryOperator):
                 sql_query_add_attr = addattr_file.read()
                 etl_full_sql_ls.append(sql_query_add_attr)
         except Exception as e:
-            print('no add attr found',e)
+            print(f'no {tablename}_add_attr_c found',e)
 
         try:
             with open(add_attr_c_path+"/"+tablename+"_C.sql",'r') as _c_file:
                 sql_query_C = _c_file.read()
                 etl_full_sql_ls.append(sql_query_C)
         except Exception as e:
-            print(f'no {tablename}_C found',e)
+            print(f'no {tablename}_c found',e)
         
         etl_full_sqls = '\n'.join(etl_full_sql_ls)
 

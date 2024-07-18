@@ -4,4 +4,4 @@
 *.pyc
 **\.cred
 .conn/conn.yml
-sql
+sql/*
