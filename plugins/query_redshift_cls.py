@@ -24,12 +24,18 @@ class sql_executor(BaseOperator):
         self.env = env
         self.conn_id= conn_id
 
-        if env == 'prod':
-            self.hercules_home = 'hercules'
-            self.perseus_home = 'perseus'
-        elif env == 'qat':
-            self.hercules_home = 'hercules_qat'
-            self.perseus_home = 'perseus_qat'
+        if env=='QAT':
+            hercules_home = "hercules_workday_qat"
+            perseus_home = "perseus_workday_qat"
+        elif env=='Prod':
+            hercules_home = "hercules_workday"
+            perseus_home = "perseus_workday"
+        elif env=='Dev':
+            hercules_home = "hercules_workday"
+            perseus_home = "perseus_workday"
+        elif env in ('Test','Local'):
+            hercules_home = "hercules_workday"
+            perseus_home = "perseus_workday"
 
 def read_sql_file(self, filename):
     # Open the sql file for parsing, read only
