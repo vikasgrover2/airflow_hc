@@ -65,7 +65,7 @@ class CustomSQLOperator(SQLExecuteQueryOperator):
             print('no params',e)
 
         rendered_sql = etl_full_sqls
-        self.log_fmtd_sql(file_dir= 'sql', file_name = tablename + ".sql", etl_full_sqls = etl_full_sqls)
+        self.log_fmtd_sql(file_dir= 'sql', file_name = tablename + ".sql", etl_full_sqls = rendered_sql)
         return rendered_sql
     
     def run_rendered_sql(self,redendered_sql,context):
