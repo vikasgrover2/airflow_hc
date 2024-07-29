@@ -82,7 +82,7 @@ default_args = {
 def verify_job_on_env():
     env = Variable.get("env")
 
-    if env == 'prod':
+    if env == 'Prod':
         return 'verify_replication_sensor'
     else:
         return 'skip_verify_ods'
