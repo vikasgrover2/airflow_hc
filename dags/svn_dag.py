@@ -101,7 +101,7 @@ svn_dag= DAG(
 svn_start = EmptyOperator(task_id="svn_job_start", dag=svn_dag)
 
 step1 = EmptyOperator(task_id="step1", dag=svn_dag)
-step1_svn_update = PythonOperator(task_id='svn_update',python_callable= svn_job, op_kwargs={"option":"-u","client_name":"Suffolk","recipients":"vikas.grover@heliocampus.com"}, dag=svn_dag)
+step1_svn_update = PythonOperator(task_id='svn_update',python_callable= svn_job, op_kwargs={"option":"-u","client_name":"Suffolk","recipients":"etlsupp@heliocampus.com"}, dag=svn_dag)
 end_step1 = EmptyOperator(task_id="end_step1", dag=svn_dag)
 svn_start>>step1>>[step1_svn_update]>>end_step1
 
