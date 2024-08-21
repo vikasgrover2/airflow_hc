@@ -20,6 +20,7 @@ add_attr_c_path = AF_Home+ "/sql/ADD_ATTR_C"
 etl_cfg_path = AF_Home+ "/sql/etl.cfg"
 hercules_home = "hercules_workday"
 perseus_home = "perseus_workday"
+worker = 'worker1'
 
 def email_job(module_name:str, client_name:str, recipients:str):
     p_module= module_name
@@ -98,12 +99,12 @@ svn_dag= DAG(
     default_args=default_args
 )
 
-svn_start = EmptyOperator(task_id="svn_job_start", dag=svn_dag)
+svn_start = EmptyOperator(task_id="svn_job_start",queue=worker, dag=svn_dag)
 
-step1 = EmptyOperator(task_id="step1", dag=svn_dag)
-step1_svn_update = PythonOperator(task_id='svn_update',python_callable= svn_job, op_kwargs={"option":"-u","client_name":"Suffolk","recipients":"etlsupp@heliocampus.com"}, dag=svn_dag)
-end_step1 = EmptyOperator(task_id="end_step1", dag=svn_dag)
+step1 = EmptyOperator(task_id="step1",queue=worker, dag=svn_dag)
+step1_svn_update = PythonOperator(task_id='svn_update',queue=worker,python_callable= svn_job, op_kwargs={"option":"-u","client_name":"Suffolk","recipients":"etlsupp@heliocampus.com"}, dag=svn_dag)
+end_step1 = EmptyOperator(task_id="end_step1",queue=worker, dag=svn_dag)
 svn_start>>step1>>[step1_svn_update]>>end_step1
 
-svn_stop = EmptyOperator(task_id="svn_job_stop", dag=svn_dag)
+svn_stop = EmptyOperator(task_id="svn_job_stop",queue=worker, dag=svn_dag)
 end_step1 >> svn_stop
